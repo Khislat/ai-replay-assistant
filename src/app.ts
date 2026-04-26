@@ -1,13 +1,12 @@
 import express from "express";
 import http from "http";
-import telegramRouter from "./routes/telegram.route.js";
-
+import routerAuth from "./routes/router.auth.js";
 
 const app = express();
 const server = http.createServer(app);
 app.use(express.json());
 
 /** ROUTERS **/
-app.use("/telegram", telegramRouter);
+app.use("/auth", routerAuth);
 
 export default server;
