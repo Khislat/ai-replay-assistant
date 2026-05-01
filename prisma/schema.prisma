@@ -19,4 +19,6 @@ model Member {
   memberNick     String
   memberPhone    String @unique
   memberPassword String
+
+  refreshToken String?
 }

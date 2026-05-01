@@ -15,3 +15,16 @@ export interface Member {
 	memberPhone: string;
 	memberPassword?: string;
 }
+
+export interface LoginResponse {
+	member: Omit<Member, "memberPassword">;
+	accessToken: string;
+	refreshToken: string;
+}
+
+export interface ExstendedRequest extends Request {
+	member: {
+		id: number;
+		memberPhone: string;
+	};
+}

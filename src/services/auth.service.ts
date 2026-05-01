@@ -1,44 +1,38 @@
-import { getNextId, MembersDB } from "../data/store.js";
-import type { Member, MemberInput } from "../libs/types/member.js";
-import bcrypt from "bcrypt";
+import { resolve } from "dns";
+import type { Member } from "../libs/types/member.js";
+import jwt from "jsonwebtoken";
+import { AUTH_TIMER } from "../utils/config.js";
 import Errors, { HttpCode, Message } from "../utils/Errors.js";
-import prisma from "../libs/prisma.js";
-const saltRounds = 10;
 
 class AuthService {
-	constructor() {}
-	public async postSignUp(input: MemberInput): Promise<Member> {
-		try {
-			const existingMember = await prisma.member.findUnique({
-				where: { memberPhone: input.memberPhone },
-			});
-
-			if (existingMember) {
-				throw new Error("Member has with this member phone");
-			}
-
-			const hashedPassword = (input.memberPassword = await bcrypt.hash(
-				input.memberPassword,
-				saltRounds
-			));
-			const newMember: Member = await prisma.member.create({
-				data: {
-					memberNick: input.memberNick,
-					memberPhone: input.memberPhone,
-					memberPassword: hashedPassword,
-				},
-			});
-
-			newMember.memberPassword = "";
-
-			return newMember;
-		} catch (err) {
-			console.error("Error, modelsignup", err);
-			throw new Errors(HttpCode.BAD_REQUEST, Message.USED_NICK_PHONE);
-		}
+	private readonly secretToken;
+	constructor() {
+		this.secretToken = process.env.SECRET_TOKEN as string;
 	}
 
-  public async postLogin(input: )
+	public async createToken(payload: Member) {
+		return new Promise((resolve, reject) => {
+			const duration = `${AUTH_TIMER}h`;
+			jwt.sign(
+				payload,
+				process.env.SECRET_TOKEN as string,
+				{ expiresIn: duration },
+				(err, token) => {
+					if (err)
+						reject(
+							new Errors(HttpCode.UNAUTHORIZED, Message.TOKEN_CREATION_FAILED)
+						);
+					else resolve(token as string);
+				}
+			);
+		});
+	}
+
+	public async checkAuth(token: string): Promise<Member> {
+		const result = (await jwt.verify(token, this.secretToken)) as Member;
+		console.log(`---[AUTH] memberNick: ${result.memberNick} ---`);
+		return result;
+	}
 }
 
 export default AuthService;
