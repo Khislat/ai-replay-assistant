@@ -28,3 +28,12 @@ export interface ExstendedRequest extends Request {
 		memberPhone: string;
 	};
 }
+
+export interface AuthMember {
+	id: number;
+	memberPhone: string;
+}
+
+export interface AuthRequest extends Request {
+	member?: AuthMember;
+}

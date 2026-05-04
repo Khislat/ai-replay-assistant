@@ -20,5 +20,11 @@ model Member {
   memberPhone    String @unique
   memberPassword String
 
-  refreshToken String?
+  refreshToken   String?
+  role           MemberRole @default(USER)
+}
+
+enum MemberRole {
+  USER
+  ADMIN
 }

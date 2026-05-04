@@ -1,15 +1,29 @@
 import express from "express";
-import authController from "../controllers/member.controller.js";
 import authMiddleware from "../middleware/auth.middleware.js";
-import type { Request, Response, NextFunction } from "express";
-import type { ExstendedRequest } from "../libs/types/member.js";
+import type { Request, Response } from "express";
 import memberController from "../controllers/member.controller.js";
+import validate from "../middleware/validate.middleware.js";
+import {
+	loginSchema,
+	signUpSchema,
+} from "../libs/validations/member.validation.js";
+import requireRole from "../middleware/role.middleware.js";
+import { MemberRole } from "@prisma/client";
 
 const routerAuth = express.Router();
 
-routerAuth.post("/signup", memberController.postSignUp);
+routerAuth.get(
+	"/admin",
+	authMiddleware,
+	requireRole(MemberRole.ADMIN),
+	(req, res) => {
+		res.json({ message: "Admin panel" });
+	}
+);
 
-routerAuth.post("/login", memberController.postLogin);
+routerAuth.post("/signup", validate(signUpSchema), memberController.postSignUp);
+
+routerAuth.post("/login", validate(loginSchema), memberController.postLogin);
 
 routerAuth.get("/test", authMiddleware, (req: Request, res: Response) => {
 	res.send("OK");

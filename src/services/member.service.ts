@@ -1,5 +1,5 @@
-import { getNextId, MembersDB } from "../data/store.js";
 import type {
+	AuthMember,
 	LoginInput,
 	LoginResponse,
 	Member,
@@ -9,7 +9,6 @@ import bcrypt from "bcrypt";
 import Errors, { HttpCode, Message } from "../utils/Errors.js";
 import prisma from "../libs/prisma.js";
 import jwt from "jsonwebtoken";
-import authMiddleware from "../middleware/auth.middleware.js";
 
 const saltRounds = 10;
 
@@ -90,6 +89,67 @@ class MemberService {
 			accessToken,
 			refreshToken,
 		};
+	}
+
+	public async refreshToken(refreshToken: string) {
+		if (!refreshToken) {
+			throw new Errors(HttpCode.UNAUTHORIZED, Message.NO_REFRESH_TOKEN);
+		}
+
+		const decoded = jwt.verify(refreshToken, process.env.REFRESH_TOKEN!) as {
+			id: number;
+		};
+
+		const user = await prisma.member.findUnique({ where: { id: decoded.id } });
+
+		if (!user || user.refreshToken !== refreshToken) {
+			throw new Errors(HttpCode.UNAUTHORIZED, Message.INVALID_REFRESH_TOKEN);
+		}
+
+		const newAccessToken = jwt.sign(
+			{ id: decoded.id },
+			process.env.ACCESS_SECRET!,
+			{ expiresIn: "1h" }
+		);
+
+		const newRefreshToken = jwt.sign(
+			{
+				id: user.id,
+			},
+			process.env.REFRESH_SECRET!,
+			{ expiresIn: "7d" }
+		);
+
+		await prisma.member.update({
+			where: {
+				id: user.id,
+			},
+			data: {
+				refreshToken: newRefreshToken,
+			},
+		});
+
+		return {
+			accessToken: newAccessToken,
+			refreshToken: newRefreshToken,
+		};
+	}
+
+	public async logout(member: AuthMember) {
+		if (!member) {
+			throw new Errors(HttpCode.UNAUTHORIZED, Message.NOT_AUTHENTICATED);
+		}
+
+		const updateRefreshToken = await prisma.member.update({
+			where: {
+				id: member.id,
+			},
+			data: {
+				refreshToken: null,
+			},
+		});
+
+		return { success: true };
 	}
 }
 
