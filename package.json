@@ -7,7 +7,8 @@
 	"scripts": {
 		"test": "NODE_OPTIONS=--experimental-vm-modules jest",
 		"start": "node server.ts",
-		"dev": "nodemon --exec tsx src/server.ts"
+		"dev": "nodemon --exec tsx src/server.ts",
+		"build": "tsc"
 	},
 	"repository": {
 		"type": "git",
