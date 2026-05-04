@@ -4,6 +4,9 @@
 	"description": "This is AI Replay Assistant Project",
 	"main": "server.ts",
 	"type": "module",
+	"engines": {
+		"node": "20.x"
+	},
 	"scripts": {
 		"test": "NODE_OPTIONS=--experimental-vm-modules jest",
 		"start": "node server.ts",
