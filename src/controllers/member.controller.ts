@@ -7,6 +7,7 @@ import type {
 } from "../libs/types/member.js";
 import Errors from "../utils/Errors.js";
 import MemberService from "../services/member.service.js";
+import logger from "../utils/logger.js";
 
 const memberController: T = {};
 const memberService = new MemberService();
@@ -17,6 +18,7 @@ memberController.postSignUp = async (
 	next: NextFunction
 ): Promise<any> => {
 	try {
+		logger.info("User enter to the signup page");
 		const input: MemberInput = req.body;
 		const result = await memberService.postSignUp(input);
 		res.json(result);
